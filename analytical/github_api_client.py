@@ -27,6 +27,8 @@ class GithubApiClient:
         await self.instance_b_i_a.get_bug_analytic()
         await self.final_block()
 
+        return resp_json
+
     async def get_info_labels(self):
         self.cursor = None
         self.repo_labels_name_list = []

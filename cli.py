@@ -4,6 +4,7 @@ import argparse
 import analytical.github_api_client as ga
 from dotenv import load_dotenv
 import asyncio
+from pprint import pprint
 
 
 async def main():
@@ -22,7 +23,9 @@ async def main():
         print('"https://github.com/Vi-812/git_check_alive" or "vi-812/git_check_alive"')
         sys.exit()
 
-    await g_cli.get_new_report(args.repository_path)
+    result = await g_cli.get_new_report(args.repository_path)
+
+    pprint(result.json())
 
 
 if __name__ == "__main__":
