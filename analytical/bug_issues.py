@@ -17,10 +17,11 @@ class BugIssuesAnalytic:
         for bug_issue in data:
             created_at = await fa.to_date(bug_issue["node"]["createdAt"])
             comment_count = bug_issue["node"]["comments"]["totalCount"]
-            if bug_issue["node"]["comments"]["nodes"]:
-                last_comment = bug_issue["node"]["comments"]["nodes"][0]["createdAt"]
-            else:
-                last_comment = None
+
+            # TODO: Seems unused, remove?
+            # last_comment = None
+            # if bug_issue["node"]["comments"]["nodes"]:
+            #     last_comment = bug_issue["node"]["comments"]["nodes"][0]["createdAt"]
 
             if bug_issue["node"]["closed"]:
                 closed_at = await fa.to_date(bug_issue["node"]["closedAt"])
@@ -34,7 +35,8 @@ class BugIssuesAnalytic:
 
     async def get_bug_analytic(self):
         closed_list_len = len(self.bug_issues_duration_closed_list)
-        open_list_len = len(self.bug_issues_duration_open_list)
+        # TODO: Seems unused, remove?
+        # open_list_len = len(self.bug_issues_duration_open_list)
         bug_issues_closed_two_months = None
         if closed_list_len >= 10:
             bug_issues_closed_two_months = 0

@@ -91,7 +91,10 @@ async def path_error_400(repository_path, e):
     logger.error(f'E400! Не распознан repository_path="{repository_path}", e="{e}".')
     resp_json.query_info.code = 400
     resp_json.query_info.error_desc = "Bad adress"
-    resp_json.query_info.error_message = "Bad repository adress, enter the address in the format 'https://github.com/Vi-812/git_check_alive' or 'vi-812/git_check_alive'."
+    resp_json.query_info.error_message = (
+        "Bad repository adress, enter the address in the format 'https://github.com/Vi-812/git_check_alive'"
+        " or 'vi-812/git_check_alive'."
+    )
 
 
 async def json_error_401(repository_owner, repository_name, e_data):

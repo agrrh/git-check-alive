@@ -2,7 +2,6 @@ import os
 from analytical import github_api_client as ga
 from analytical import func_api_client as fa
 from app import models, db, load_dotenv
-from sqlalchemy import func
 from datetime import datetime
 
 from hashlib import blake2s

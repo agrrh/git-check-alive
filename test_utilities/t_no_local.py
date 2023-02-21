@@ -54,7 +54,7 @@ while True:
     response = requests.post(url=url, json=json)
     try:
         data = response.json()
-    except:
+    except Exception:
         logger.error(
             f'code="{response.status_code}", repo="{logg_repo}", response="{response.text}"'
         )
@@ -65,5 +65,5 @@ while True:
         time = round(time.seconds + time.microseconds * 0.000001, 2)
         if data["query_info"]["time"]:
             print("Погрешность:", round(time - data["query_info"]["time"], 2))
-        if data["query_info"]["database"] == None:
+        if data["query_info"]["database"] is None:
             break
