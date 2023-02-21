@@ -14,7 +14,10 @@ class UseGraphQL:
     Формирует json запрос к GraphQL GitHub'а, отправляет через класс Link.
     :return: информацию о репозитории полученную от Link
     """
-    def __init__(self, repository_owner, repository_name, cursor, token, labels_bug=None):
+
+    def __init__(
+        self, repository_owner, repository_name, cursor, token, labels_bug=None
+    ):
         """
         :param repository_owner: логин владельца репозитория
         :param repository_name: имя репозитория
@@ -30,15 +33,14 @@ class UseGraphQL:
 
     async def get_info_labels_json(self):
         json = {
-            'query':
-            """
+            "query": """
             query GetInfo ($owner: String!, $name: String!, $cursor: String) {
-                repository(name: $name, owner: $owner) {                    
+                repository(name: $name, owner: $owner) {
                     owner {
                         login
                     }
                     name
-                    description                    
+                    description
                     stargazerCount
                     createdAt
                     updatedAt
@@ -81,7 +83,7 @@ class UseGraphQL:
                                 name
                             }
                         }
-                    }                    
+                    }
                 }
                 rateLimit {
                     cost
@@ -90,11 +92,11 @@ class UseGraphQL:
                 }
             }
             """,
-            'variables': {
+            "variables": {
                 "owner": self.repository_owner,
                 "name": self.repository_name,
-                "cursor": self.cursor
-            }
+                "cursor": self.cursor,
+            },
         }
         instance_link = Link(self.token, json)
         data = await instance_link.link()
@@ -102,8 +104,7 @@ class UseGraphQL:
 
     async def get_bug_issues_json(self):
         json = {
-            'query':
-            """
+            "query": """
             query GetIssues($owner: String!, $name: String!, $labels: [String!], $cursor: String) {
                 repository(name: $name, owner: $owner) {
                     issues(first: 100, filterBy: {labels: $labels}, after: $cursor) {
@@ -135,12 +136,12 @@ class UseGraphQL:
                 }
             }
             """,
-            'variables': {
+            "variables": {
                 "owner": self.repository_owner,
                 "name": self.repository_name,
                 "labels": self.labels_bug,
-                "cursor": self.cursor
-            }
+                "cursor": self.cursor,
+            },
         }
         instance_link = Link(self.token, json)
         data = await instance_link.link()
@@ -153,19 +154,22 @@ class Link:
     В случае ошибки записывает ошибку в resp_json и возвращает None.
     :return: информацию полученную от GitHub'а в формате словаря python
     """
+
     def __init__(self, token, json):
-        self.url = 'https://api.github.com/graphql'
-        self.headers = {'Authorization': 'token ' + token}
+        self.url = "https://api.github.com/graphql"
+        self.headers = {"Authorization": "token " + token}
         self.json = json
 
     async def link(self):
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.post(url=self.url, headers=self.headers, json=self.json) as resp:
+                async with session.post(
+                    url=self.url, headers=self.headers, json=self.json
+                ) as resp:
                     data = json.loads(await resp.read())
                 return data
         except requests.exceptions.ConnectionError as e:
-            logger.error(f'ERROR500! Ошибка ссоединения с сервером. Исключение: {e}')
+            logger.error(f"ERROR500! Ошибка ссоединения с сервером. Исключение: {e}")
             resp_json.query_info.code = 500
-            resp_json.query_info.error_desc = 'ConnectionError'
+            resp_json.query_info.error_desc = "ConnectionError"
             resp_json.query_info.error_message = str(e)

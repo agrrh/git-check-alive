@@ -5,27 +5,29 @@ from analytical import database
 import asyncio
 
 
-@app_flask.route('/api', methods=['POST'])
+@app_flask.route("/api", methods=["POST"])
 def api_request():
-    token_api = request.json['token']
-    repository_path = request.json['repository_path']
+    token_api = request.json["token"]
+    repository_path = request.json["repository_path"]
     instance_db_client = database.DataBaseHandler()
     return asyncio.run(instance_db_client.get_report(repository_path, token_api))
 
 
-@app_flask.route('/', methods=['GET', 'POST'])
+@app_flask.route("/", methods=["GET", "POST"])
 def main_page():
-    if request.method == 'GET':
+    if request.method == "GET":
         form = forms.RepositoryPathForm()
-        return render_template('index.html', form=form), 200
-    elif request.method == 'POST':
+        return render_template("index.html", form=form), 200
+    elif request.method == "POST":
         form = forms.RepositoryPathForm()
-        repository_path = request.form['link_repository']
+        repository_path = request.form["link_repository"]
         instance_db_client = database.DataBaseHandler()
-        json, code = asyncio.run(instance_db_client.get_report(repository_path, token_flask))
-        return render_template('index.html', form=form, json=json), code
+        json, code = asyncio.run(
+            instance_db_client.get_report(repository_path, token_flask)
+        )
+        return render_template("index.html", form=form, json=json), code
 
 
 @app_flask.errorhandler(404)
 def page_not_found(error):
-    return 'Страницы не существует!!', 404
+    return "Страницы не существует!!", 404

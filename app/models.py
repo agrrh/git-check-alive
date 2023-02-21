@@ -1,10 +1,12 @@
 from app import db
-from sqlalchemy import Column, DateTime, func
+from sqlalchemy import func
 
 
 class RepositoryInfo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    upd_date = db.Column(db.DateTime, onupdate=func.now(), default=func.now(), nullable=False)
+    upd_date = db.Column(
+        db.DateTime, onupdate=func.now(), default=func.now(), nullable=False
+    )
     repo_path = db.Column(db.String, unique=True, nullable=False)
     description = db.Column(db.String, nullable=True)
     stars = db.Column(db.Integer, nullable=False)
@@ -34,7 +36,7 @@ class RepositoryInfo(db.Model):
     cost = db.Column(db.Integer, nullable=False)
 
     def __repr__(self):
-        return f'<{self.repo_path}>'
+        return f"<{self.repo_path}>"
 
 
 class QueryStatistics(db.Model):

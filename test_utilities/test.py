@@ -1,15 +1,16 @@
 import asyncio
 
+
 async def foo():
-    print('11Running in foo')
+    print("11Running in foo")
     await asyncio.sleep(0)
-    print('22Explicit context switch to foo again')
+    print("22Explicit context switch to foo again")
 
 
 async def bar():
-    print('33Explicit context to bar')
+    print("33Explicit context to bar")
     await asyncio.sleep(0)
-    print('44Implicit context switch back to bar')
+    print("44Implicit context switch back to bar")
 
 
 ioloop = asyncio.get_event_loop()
