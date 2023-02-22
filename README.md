@@ -1,10 +1,9 @@
-# GIT CHECK ALIVE
+# Git Check Alive
 
-1. Перейдите в папку с программой
-2. Установите зависимости (python -m pip install -r requirements.txt)
-3. Переименуйте файл ".env", вставьте в данный файл ваш токен
-(Сгенерировать GitHub Token https://github.com/settings/tokens)
-4. Запустите файл (python cli.py ссылка_на_репозиторий)
+## Usage
 
-Ссылка передается в формате "https://github.com/Vi-812/git_check_alive" либо "имя_пользователя/имя_репозитория"               
- => "vi-812/git_check_alive"
+```
+$ docker-compose up --build
+$ http 127.0.0.1:8081/repo/nodejs/node/refresh token=YOUR_GITHUB_TOKEN
+$ http 127.0.0.1:8081/repo/nodejs/node
+```
