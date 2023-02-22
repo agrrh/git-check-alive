@@ -16,7 +16,7 @@ r = redis.Redis(host="redis", port=6379, db=0, decode_responses=True)
 GITHUB_TOKEN_DEFAULT = os.environ.get("APP_GITHUB_TOKEN")
 
 
-def process(data: dict) -> None:
+def process(data: dict) -> None:  # noqa: CAC001
     task = Task(**data)
 
     logging.warning(f"Processing Task: {task.id}")
@@ -44,8 +44,9 @@ def process(data: dict) -> None:
 
         try:
             repo_github = g.get_repo(repo.address)
-        except Exception:
+        except Exception as e:
             logging.error(f"Could not get data for repo: {repo.address}")
+            logging.warning(e)
             task.success = False
         else:
             logging.warning("loading")
@@ -53,8 +54,9 @@ def process(data: dict) -> None:
 
     # Save task result
 
-    r.set(repo.db_key, repo.json())
-    r.expire(repo.db_key, 3600)
+    if task.success:
+        r.set(repo.db_key, repo.json())
+        r.expire(repo.db_key, 3600)
 
     task.finished = True
 
