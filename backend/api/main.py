@@ -4,7 +4,7 @@ import json
 import logging
 import redis
 
-from lib.models.repository import RepoRefreshRequest, RepoRequest
+from lib.models.repository import RepoRefreshRequest, Repo
 from lib.models.task import Task
 
 
@@ -19,40 +19,36 @@ async def read_root() -> object:
 
 @app.get("/repo/{owner}/{name}")
 async def repo_get(owner: str, name: str) -> object:
-    repo_req = RepoRequest(
+    repo = Repo(
         owner=owner,
         name=name,
     )
 
     try:
-        repo_data = r.get(f"repo.{repo_req.sha256}")
+        repo_data = r.get(repo.db_key)
     except Exception:
         raise HTTPException(status_code=500, detail="Could not get repository, try again later")
 
     if not repo_data:
         raise HTTPException(status_code=404, detail="Could not find repository, please refresh first")
 
-    # TODO: Load repository
-    repo = {}
-    repo.update({"foo": 42})
+    repo = Repo(**json.loads(repo_data))
+
+    logging.debug(repo)
 
     return repo
 
 
 @app.post("/repo/{owner}/{name}/refresh", status_code=201)
 async def repo_refresh(owner: str, name: str, refresh_req: RepoRefreshRequest) -> object:
-    repo_req = RepoRequest(
+    repo = Repo(
         owner=owner,
         name=name,
     )
 
-    try:
-        r.set(f"repo.{repo_req.sha256}", repo_req.json())
-    except Exception:
-        raise HTTPException(status_code=500, detail="Could not create repository, try again later")
-
     task = Task(
-        repo_sha256=repo_req.sha256,
+        repo_sha256=repo.sha256,
+        repo_address=repo.address,
         token=refresh_req.token,
     )
 
@@ -64,7 +60,7 @@ async def repo_refresh(owner: str, name: str, refresh_req: RepoRefreshRequest) -
         raise HTTPException(status_code=500, detail="Could not schedule task, try again later")
 
     return {
-        "request": repo_req.dict(exclude={"sha256"}),
+        "request": repo.dict(include={"owner", "name"}),
         "task": task.id,
     }
 
@@ -82,6 +78,6 @@ async def read_task(id: str) -> object:  # noqa: A002
     task_data = json.loads(task_data_raw)
     task = Task(**task_data)
 
-    logging.debug(task)
+    task.token = "<hidden>"
 
-    return task
+    return task.dict()

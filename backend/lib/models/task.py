@@ -10,13 +10,12 @@ class Task(BaseModel):
     db_key: Optional[str]
 
     repo_sha256: str
+    repo_address: str
+
     token: str
 
     finished: Optional[bool] = False
     success: Optional[bool]
-
-    # TODO: Remove result from Task, store in Repo
-    result: Optional[dict]
 
     def __init__(self, **kwargs) -> None:  # noqa: ANN003
         super().__init__(**kwargs)
