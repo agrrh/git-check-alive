@@ -26,8 +26,6 @@ class Repo(BaseModel):
     stars_count: Optional[int]
     forks_count: Optional[int]
 
-    watchers_count: Optional[int]
-
     def __init__(self, **kwargs) -> None:  # noqa: ANN003
         super().__init__(**kwargs)
 
@@ -52,5 +50,3 @@ class Repo(BaseModel):
 
         self.stars_count = data.stargazers_count
         self.forks_count = data.forks_count
-
-        self.watchers_count = data.watchers_count
