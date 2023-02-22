@@ -13,8 +13,6 @@ r = redis.Redis(host="redis", port=6379, db=0, decode_responses=True)
 
 
 def process(data: dict) -> None:
-    # Check if repo already populated
-
     task = Task(**data)
 
     logging.warning(f"Processing Task: {task.id}")
@@ -24,16 +22,16 @@ def process(data: dict) -> None:
 
     task.success = True
 
-    if r.exists(f"repo.{task.repo_sha256}"):
-        repo = Repo(
-            **json.loads(
-                r.get(f"repo.{task.repo_sha256}"),
-            ),
-        )
+    # Check if repo already populated
+    repo_db_key = f"repo.{task.repo_sha256}"
 
+    if r.exists(repo_db_key):
+        repo_data_raw = r.get(repo_db_key)
+        repo_data = json.loads(repo_data_raw)
+        repo = Repo(**repo_data)
+
+    # If we don't have data, get it from github
     else:
-        # If we don't have data, get it from github
-
         repo = Repo(
             address=task.repo_address,
         )
