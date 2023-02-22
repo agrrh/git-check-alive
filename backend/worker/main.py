@@ -24,7 +24,7 @@ def process(data: dict) -> None:
     r.expire(task.db_key, 3600)
 
 
-def main() -> None:
+def main() -> None:  # noqa: CAC001, CCR001
     p = r.pubsub()
     p.subscribe("repo.refresh")
 
@@ -46,7 +46,7 @@ def main() -> None:
                 t = Thread(target=process, args=(data,))
                 t.start()
 
-            except Exception as e:
+            except Exception as e:  # noqa: PIE786
                 logging.error(f"Could not process: {e}")
                 logging.debug(f"{data_raw}")
 

@@ -1,7 +1,8 @@
 from fastapi import FastAPI, HTTPException
 
-import redis
 import json
+import logging
+import redis
 
 from lib.models.repository import RepoRefreshRequest, RepoRequest
 from lib.models.task import Task
@@ -69,7 +70,7 @@ async def repo_refresh(author: str, name: str, refresh_req: RepoRefreshRequest) 
 
 
 @app.get("/task/{id}")
-async def read_task(id: str) -> object:
+async def read_task(id: str) -> object:  # noqa: A002
     try:
         task_data_raw = r.get(f"task.{id}")
     except Exception:
@@ -81,5 +82,7 @@ async def read_task(id: str) -> object:
     task_data = json.loads(task_data_raw)
 
     task = Task(**task_data)
+
+    logging.debug(task)
 
     return task

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import Optional
 
 import hashlib
@@ -15,7 +15,7 @@ class RepoRequest(BaseModel):
     sha256: Optional[str]
     sha256_short: Optional[str]
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs) -> None:  # noqa: ANN003
         super().__init__(**kwargs)
         object.__setattr__(self, "sha256", self.__gen_sha256())
         object.__setattr__(self, "sha256_short", self.__gen_sha256(short=True))
