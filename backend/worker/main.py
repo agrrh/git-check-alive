@@ -49,8 +49,6 @@ def process(data: dict) -> None:
 
     # Save task result
 
-    logging.warning(f"{repo.db_key}, {repo.owner}, {repo.name}, {repo.address}")
-
     r.set(repo.db_key, repo.json())
     r.expire(repo.db_key, 3600)
 
