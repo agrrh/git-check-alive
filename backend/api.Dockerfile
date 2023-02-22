@@ -10,5 +10,5 @@ COPY ./ ./
 ENV PYTHONUNBUFFERED yes
 ENV WEB_CONCURRENCY 2
 
-ENTRYPOINT ["uvicorn", "--host", "0.0.0.0", "api.main:app"]
+ENTRYPOINT ["uvicorn", "--host", "0.0.0.0", "app_api:app"]
 CMD []

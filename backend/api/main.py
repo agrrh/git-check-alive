@@ -1,9 +1,10 @@
 from fastapi import FastAPI, HTTPException
 
 import redis
+import json
 
 from lib.models.repository import RepoRefreshRequest, RepoRequest
-from lib.models.task import TaskPlan
+from lib.models.task import Task
 
 
 r = redis.Redis(host="redis", port=6379, db=0, decode_responses=True)
@@ -11,12 +12,12 @@ app = FastAPI()
 
 
 @app.get("/")
-async def read_root():
+async def read_root() -> object:
     return {"Hello": "World"}
 
 
-@app.get("/repo/{author}/{repo}")
-async def repo_get(author: str, name: str):
+@app.get("/repo/{author}/{name}")
+async def repo_get(author: str, name: str) -> object:
     repo_req = RepoRequest(
         author=author,
         name=name,
@@ -30,11 +31,15 @@ async def repo_get(author: str, name: str):
     if not repo_data:
         raise HTTPException(status_code=404, detail="Could not find repository, please refresh first")
 
-    return repo_data.dict()
+    # TODO: Load repository
+    repo = {}
+    repo.update({"foo": 42})
+
+    return repo
 
 
 @app.post("/repo/{author}/{name}/refresh", status_code=201)
-async def repo_refresh(author: str, name: str, refresh_req: RepoRefreshRequest):
+async def repo_refresh(author: str, name: str, refresh_req: RepoRefreshRequest) -> object:
     repo_req = RepoRequest(
         author=author,
         name=name,
@@ -45,7 +50,7 @@ async def repo_refresh(author: str, name: str, refresh_req: RepoRefreshRequest):
     except Exception:
         raise HTTPException(status_code=500, detail="Could not create repository, try again later")
 
-    task = TaskPlan(
+    task = Task(
         repo_sha256=repo_req.sha256,
         token=refresh_req.token,
     )
@@ -61,3 +66,20 @@ async def repo_refresh(author: str, name: str, refresh_req: RepoRefreshRequest):
         "request": repo_req.dict(exclude={"sha256"}),
         "task": task.id,
     }
+
+
+@app.get("/task/{id}")
+async def read_task(id: str) -> object:
+    try:
+        task_data_raw = r.get(f"task.{id}")
+    except Exception:
+        raise HTTPException(status_code=500, detail="Could not get task, try again later")
+
+    if not task_data_raw:
+        raise HTTPException(status_code=404, detail="Could not find task, please check ID")
+
+    task_data = json.loads(task_data_raw)
+
+    task = Task(**task_data)
+
+    return task
