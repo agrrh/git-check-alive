@@ -15,6 +15,7 @@ class Task(BaseModel):
     finished: Optional[bool] = False
     success: Optional[bool]
 
+    # TODO: Remove result from Task, store in Repo
     result: Optional[dict]
 
     def __init__(self, **kwargs) -> None:  # noqa: ANN003

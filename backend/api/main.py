@@ -17,10 +17,10 @@ async def read_root() -> object:
     return {"Hello": "World"}
 
 
-@app.get("/repo/{author}/{name}")
-async def repo_get(author: str, name: str) -> object:
+@app.get("/repo/{owner}/{name}")
+async def repo_get(owner: str, name: str) -> object:
     repo_req = RepoRequest(
-        author=author,
+        owner=owner,
         name=name,
     )
 
@@ -39,10 +39,10 @@ async def repo_get(author: str, name: str) -> object:
     return repo
 
 
-@app.post("/repo/{author}/{name}/refresh", status_code=201)
-async def repo_refresh(author: str, name: str, refresh_req: RepoRefreshRequest) -> object:
+@app.post("/repo/{owner}/{name}/refresh", status_code=201)
+async def repo_refresh(owner: str, name: str, refresh_req: RepoRefreshRequest) -> object:
     repo_req = RepoRequest(
-        author=author,
+        owner=owner,
         name=name,
     )
 
@@ -80,7 +80,6 @@ async def read_task(id: str) -> object:  # noqa: A002
         raise HTTPException(status_code=404, detail="Could not find task, please check ID")
 
     task_data = json.loads(task_data_raw)
-
     task = Task(**task_data)
 
     logging.debug(task)
