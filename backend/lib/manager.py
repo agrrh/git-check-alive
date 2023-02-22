@@ -13,22 +13,25 @@ class Manager:
         self.cache = cache
 
     def get_repository_from_cache(self, owner: str, name: str) -> (Repo, bool):
+        logging.debug("Initializing new Repo container")
         repo = Repo(
             owner=owner,
             name=name,
         )
 
+        logging.debug(f"Getting Repo data from cache by key: {repo.db_key}")
         try:
             repo_data = self.cache.get(repo.db_key)
         except Exception:
+            logging.info(f"No cached data for {repo.address}")
             return (repo, False)
 
         if not repo_data:
+            logging.debug(f"Repo data for {repo.db_key} seems empty")
             return (repo, False)
 
+        logging.debug(f"Populating Repo {repo.address} with cached data")
         repo = Repo(**json.loads(repo_data))
-
-        logging.debug(f"Loaded Repo object: {repo}")
 
         return (repo, True)
 
