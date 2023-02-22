@@ -2,6 +2,8 @@ import json
 import logging
 import redis
 import time
+import os
+
 from github import Github
 
 from threading import Thread
@@ -10,6 +12,8 @@ from lib.models.task import Task
 from lib.models.repository import Repo
 
 r = redis.Redis(host="redis", port=6379, db=0, decode_responses=True)
+
+GITHUB_TOKEN_DEFAULT = os.environ.get("APP_GITHUB_TOKEN")
 
 
 def process(data: dict) -> None:
@@ -36,7 +40,7 @@ def process(data: dict) -> None:
             address=task.repo_address,
         )
 
-        g = Github(task.token)
+        g = Github(task.token or GITHUB_TOKEN_DEFAULT)
 
         try:
             repo_github = g.get_repo(repo.address)

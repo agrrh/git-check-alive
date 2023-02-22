@@ -9,10 +9,10 @@ class Task(BaseModel):
 
     db_key: Optional[str]
 
-    repo_sha256: str
-    repo_address: str
+    repo_sha256: Optional[str]
+    repo_address: Optional[str]
 
-    token: str
+    token: Optional[str]
 
     finished: Optional[bool] = False
     success: Optional[bool]

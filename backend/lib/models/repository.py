@@ -5,7 +5,7 @@ import hashlib
 
 
 class RepoRefreshRequest(BaseModel):
-    token: str
+    token: Optional[str]
 
 
 class Repo(BaseModel):

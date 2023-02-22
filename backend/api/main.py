@@ -1,15 +1,15 @@
 from fastapi import FastAPI, HTTPException
 
-import json
-import logging
 import redis
 
 from lib.models.repository import RepoRefreshRequest, Repo
-from lib.models.task import Task
+from lib.manager import Manager
 
 
-r = redis.Redis(host="redis", port=6379, db=0, decode_responses=True)
+cache = redis.Redis(host="redis", port=6379, db=0, decode_responses=True)
 app = FastAPI()
+
+manager = Manager(cache=cache)
 
 
 @app.get("/")
@@ -18,46 +18,37 @@ async def read_root() -> object:
 
 
 @app.get("/repo/{owner}/{name}")
-async def repo_get(owner: str, name: str) -> object:
-    repo = Repo(
-        owner=owner,
-        name=name,
-    )
+async def get_repo(owner: str, name: str) -> object:
+    repo, success = manager.get_repository_from_cache(owner=owner, name=name)
 
-    try:
-        repo_data = r.get(repo.db_key)
-    except Exception:
-        raise HTTPException(status_code=500, detail="Could not get repository, try again later")
+    if not success:
+        (_, _) = manager.place_refresh_task(repo)
 
-    if not repo_data:
-        raise HTTPException(status_code=404, detail="Could not find repository, please refresh first")
-
-    repo = Repo(**json.loads(repo_data))
-
-    logging.debug(repo)
+        raise HTTPException(
+            status_code=404,
+            detail="Could not find repository data, please return in a moment",
+        )
 
     return repo
 
 
 @app.post("/repo/{owner}/{name}/refresh", status_code=201)
-async def repo_refresh(owner: str, name: str, refresh_req: RepoRefreshRequest) -> object:
+async def post_repo(owner: str, name: str, refresh_req: RepoRefreshRequest | None = None) -> object:
     repo = Repo(
         owner=owner,
         name=name,
     )
 
-    task = Task(
-        repo_sha256=repo.sha256,
-        repo_address=repo.address,
-        token=refresh_req.token,
+    (task, success) = manager.place_refresh_task(
+        repo,
+        refresh_req.token if refresh_req else None,
     )
 
-    channel = "repo.refresh"
-
-    try:
-        r.publish(channel, task.json())
-    except Exception:
-        raise HTTPException(status_code=500, detail="Could not schedule task, try again later")
+    if not success:
+        raise HTTPException(
+            status_code=500,
+            detail="Could not place refresh task, try again later",
+        )
 
     return {
         "request": repo.dict(include={"owner", "name"}),
@@ -66,18 +57,13 @@ async def repo_refresh(owner: str, name: str, refresh_req: RepoRefreshRequest) -
 
 
 @app.get("/task/{id}")
-async def read_task(id: str) -> object:  # noqa: A002
-    try:
-        task_data_raw = r.get(f"task.{id}")
-    except Exception:
-        raise HTTPException(status_code=500, detail="Could not get task, try again later")
+async def get_task(id: str) -> object:  # noqa: A002
+    task, success = manager.get_refresh_task(id)
 
-    if not task_data_raw:
-        raise HTTPException(status_code=404, detail="Could not find task, please check ID")
-
-    task_data = json.loads(task_data_raw)
-    task = Task(**task_data)
-
-    task.token = "<hidden>"
+    if not success:
+        raise HTTPException(
+            status_code=500,
+            detail="Could not get refresh task, try again later",
+        )
 
     return task.dict()
