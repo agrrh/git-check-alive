@@ -62,16 +62,12 @@ class TaskManager:
     def process(self, data: dict) -> None:
         task = Task(**data)
 
-        should_run = self._allocate_task(task)
-
-        if not should_run:
+        if not self._allocate_task(task):
             return None
 
         logging.warning(f"Processing Task: {task.id}")
 
-        repo = Repo(
-            address=task.repo_address,
-        )
+        repo = Repo(address=task.repo_address)
 
         g = Github(task.token or self.GITHUB_TOKEN_DEFAULT)
 
