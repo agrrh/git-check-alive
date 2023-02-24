@@ -12,10 +12,9 @@ class Repo(BaseModel):
     owner: str = ""
     name: str = ""
 
-    address: Optional[str]
+    id: Optional[str]  # noqa: A003
 
-    sha256: Optional[str]
-    sha256_short: Optional[str]
+    address: Optional[str]
 
     db_key: Optional[str]
 
@@ -30,15 +29,13 @@ class Repo(BaseModel):
         super().__init__(**kwargs)
 
         self.address = self.address or f"{self.owner}/{self.name}"
-        self.sha256 = self.__gen_sha256()
-        self.sha256_short = self.__gen_sha256(short=True)
-        self.db_key = f"repo.{self.sha256}"
+        self.id = self.__gen_id()
+        self.db_key = f"repo.{self.id}"
 
-    def __gen_sha256(self, short: bool = False) -> str:
+    def __gen_id(self) -> str:
         notation = self.address.encode()
-        sha256 = hashlib.sha256(notation).hexdigest()
 
-        return sha256[:7] if short else sha256
+        return hashlib.sha256(notation).hexdigest()
 
     def _load_from_github_data(self, data: object) -> None:
         self.owner = data.owner.login

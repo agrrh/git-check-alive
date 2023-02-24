@@ -11,7 +11,7 @@ class Task(BaseModel):
     db_lock_key: Optional[str]
     db_repo_key: Optional[str]
 
-    repo_sha256: Optional[str]
+    repo_id: Optional[str]
     repo_address: Optional[str]
 
     token: Optional[str]
@@ -24,4 +24,4 @@ class Task(BaseModel):
         self.id = self.id or str(uuid.uuid4())
         self.db_key = f"task.{self.id}"
         self.db_lock_key = f"lock.{self.id}"
-        self.db_repo_key = f"repo.{self.repo_sha256}"
+        self.db_repo_key = f"repo.{self.repo_id}"

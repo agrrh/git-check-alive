@@ -36,7 +36,7 @@ class ApiManager:
 
     def place_refresh_task(self, repo: Repo, token: str = "") -> (Task, bool):
         task = Task(
-            repo_sha256=repo.sha256,
+            repo_id=repo.id,
             repo_address=repo.address,
             token=token,
         )
