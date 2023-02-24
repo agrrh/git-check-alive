@@ -1,97 +1,63 @@
-import json
 import logging
 import redis
 import time
 import os
 
-from github import Github
-
 from threading import Thread
+
+from github import Github
 
 from lib.models.task import Task
 from lib.models.repository import Repo
-
-r = redis.Redis(host="redis", port=6379, db=0, decode_responses=True)
+from lib.models.message import Message
+from lib.task_manager import TaskManager
 
 GITHUB_TOKEN_DEFAULT = os.environ.get("APP_GITHUB_TOKEN")
 
+db = redis.Redis(host="redis", port=6379, db=0, decode_responses=True)
 
-def process(data: dict) -> None:  # noqa: CAC001
+manager = TaskManager(db=db)
+
+
+def process(data: dict) -> None:
     task = Task(**data)
+
+    should_run = manager.allocate_task(task)
+
+    if not should_run:
+        return None
 
     logging.warning(f"Processing Task: {task.id}")
 
-    r.set(task.db_key, task.json())
-    r.expire(task.db_key, 60)
+    repo = Repo(
+        address=task.repo_address,
+    )
 
-    task.success = True
+    g = Github(task.token or GITHUB_TOKEN_DEFAULT)
 
-    # Check if repo already populated
-    repo_db_key = f"repo.{task.repo_sha256}"
+    repo, task.success = manager.repo_fetch(repo, github=g)
 
-    if r.exists(repo_db_key):
-        repo_data_raw = r.get(repo_db_key)
-        repo_data = json.loads(repo_data_raw)
-        repo = Repo(**repo_data)
-
-    # If we don't have data, get it from github
-    else:
-        repo = Repo(
-            address=task.repo_address,
-        )
-
-        g = Github(task.token or GITHUB_TOKEN_DEFAULT)
-
-        try:
-            repo_github = g.get_repo(repo.address)
-        except Exception as e:
-            logging.error(f"Could not get data for repo: {repo.address}")
-            logging.warning(e)
-            task.success = False
-        else:
-            logging.warning("loading")
-            repo._load_from_github_data(repo_github)
-
-    # Save task result
-
-    if task.success:
-        r.set(repo.db_key, repo.json())
-        r.expire(repo.db_key, 3600)
-
-    task.finished = True
-
-    r.set(task.db_key, task.json())
-    r.expire(task.db_key, 300)
+    manager.task_commit = (task, repo)
 
 
-def main() -> None:  # noqa: CAC001, CCR001
+def main() -> None:
     logging.critical("Starting worker")
 
-    p = r.pubsub()
+    p = db.pubsub()
     p.subscribe("repo.refresh")
 
     while True:
-        message = p.get_message()
+        body = p.get_message()
 
-        if not message:
-            continue
+        message = Message(body=body)
 
-        if message.get("type") != "message":
-            continue
+        logging.info(f"Got message: {message.raw}")
 
-        data_raw = message.get("data")
+        try:
+            t = Thread(target=process, args=(message.data,))
+            t.start()
 
-        if data_raw:
-            logging.info(f"Got message: {data_raw}")
-
-            try:
-                data = json.loads(data_raw)
-
-                t = Thread(target=process, args=(data,))
-                t.start()
-
-            except Exception as e:  # noqa: PIE786
-                logging.error(f"Could not process: {e}")
-                logging.debug(f"{data_raw}")
+        except Exception as e:  # noqa: PIE786
+            logging.error(f'Could not process "{e}": {message.raw}')
 
         time.sleep(0.001)

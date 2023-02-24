@@ -3,13 +3,13 @@ from fastapi import FastAPI, HTTPException
 import redis
 
 from lib.models.repository import RepoRefreshRequest, Repo
-from lib.manager import Manager
+from lib.api_manager import ApiManager
 
 
-cache = redis.Redis(host="redis", port=6379, db=0, decode_responses=True)
+db = redis.Redis(host="redis", port=6379, db=0, decode_responses=True)
 app = FastAPI()
 
-manager = Manager(cache=cache)
+manager = ApiManager(db=db)
 
 
 @app.get("/")

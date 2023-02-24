@@ -7,10 +7,9 @@ from lib.models.repository import Repo
 from lib.models.task import Task
 
 
-class Manager:
-    def __init__(self, cache: redis.Redis) -> None:
-        super(Manager, self).__init__()
-        self.cache = cache
+class ApiManager:
+    def __init__(self, db: redis.Redis) -> None:
+        self.db = db
 
     def get_repository_from_cache(self, owner: str, name: str) -> (Repo, bool):
         logging.debug("Initializing new Repo container")
@@ -21,7 +20,7 @@ class Manager:
 
         logging.debug(f"Getting Repo data from cache by key: {repo.db_key}")
         try:
-            repo_data = self.cache.get(repo.db_key)
+            repo_data = self.db.get(repo.db_key)
         except Exception:
             logging.info(f"No cached data for {repo.address}")
             return (repo, False)
@@ -45,7 +44,7 @@ class Manager:
         channel = "repo.refresh"
 
         try:
-            self.cache.publish(channel, task.json())
+            self.db.publish(channel, task.json())
         except Exception:
             return (task, False)
 
@@ -57,7 +56,7 @@ class Manager:
         )
 
         try:
-            task_data = self.cache.get(task.db_key)
+            task_data = self.db.get(task.db_key)
         except Exception:
             return (task, False)
 
