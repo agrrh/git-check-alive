@@ -1,6 +1,5 @@
 import logging
 import redis
-import time
 import os
 
 from threading import Thread
@@ -32,5 +31,3 @@ def main() -> None:
 
         except Exception as e:  # noqa: PIE786
             logging.error(f'Could not process "{e}": {message.raw}')
-
-        time.sleep(0.001)
