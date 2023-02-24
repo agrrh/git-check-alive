@@ -5,10 +5,6 @@ import os
 
 from threading import Thread
 
-from github import Github
-
-from lib.models.task import Task
-from lib.models.repository import Repo
 from lib.models.message import Message
 from lib.task_manager import TaskManager
 
@@ -16,45 +12,22 @@ GITHUB_TOKEN_DEFAULT = os.environ.get("APP_GITHUB_TOKEN")
 
 db = redis.Redis(host="redis", port=6379, db=0, decode_responses=True)
 
-manager = TaskManager(db=db)
-
-
-def process(data: dict) -> None:
-    task = Task(**data)
-
-    should_run = manager.allocate_task(task)
-
-    if not should_run:
-        return None
-
-    logging.warning(f"Processing Task: {task.id}")
-
-    repo = Repo(
-        address=task.repo_address,
-    )
-
-    g = Github(task.token or GITHUB_TOKEN_DEFAULT)
-
-    repo, task.success = manager.repo_fetch(repo, github=g)
-
-    manager.task_commit = (task, repo)
+manager = TaskManager(db=db, github_token=GITHUB_TOKEN_DEFAULT)
 
 
 def main() -> None:
     logging.critical("Starting worker")
 
-    p = db.pubsub()
+    p = db.pubsub(ignore_subscribe_messages=True)
     p.subscribe("repo.refresh")
 
-    while True:
-        body = p.get_message()
-
-        message = Message(body=body)
+    for body in p.listen():
+        message = Message(body=dict(body))
 
         logging.info(f"Got message: {message.raw}")
 
         try:
-            t = Thread(target=process, args=(message.data,))
+            t = Thread(target=manager.process, args=(message.data,))
             t.start()
 
         except Exception as e:  # noqa: PIE786

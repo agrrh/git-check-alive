@@ -5,7 +5,7 @@ from typing import Optional
 
 
 class Message(BaseModel):
-    body: str
+    body: dict
 
     raw: Optional[str]
     data: Optional[dict]
@@ -19,11 +19,13 @@ class Message(BaseModel):
         self.data = self._data_decode()
 
     def _validate(self) -> bool:
-        not_empty = self.body is not None
-        is_message = self.body.get("type") != "message"
-        has_data = bool(self.body.get("data"))
-
-        return not_empty and is_message and has_data
+        # fmt: off
+        return (
+            self.body is not None
+            and self.body.get("type") != "message"
+            and bool(self.body.get("data"))
+        )
+        # fmt: on
 
     def _raw_data_get(self) -> str:
         return (self.body or {}).get("data", "{}")
