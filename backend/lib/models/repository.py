@@ -1,7 +1,7 @@
+import uuid
+
 from pydantic import BaseModel
 from typing import Optional
-
-import hashlib
 
 
 class RepoRefreshRequest(BaseModel):
@@ -33,9 +33,8 @@ class Repo(BaseModel):
         self.db_key = f"repo.{self.id}"
 
     def __gen_id(self) -> str:
-        notation = self.address.encode()
-
-        return hashlib.sha256(notation).hexdigest()
+        id_ = uuid.uuid5(uuid.NAMESPACE_URL, f"https://github.com/{self.address}")
+        return str(id_)
 
     def _load_from_github_data(self, data: object) -> None:
         self.owner = data.owner.login
